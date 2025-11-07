@@ -1,6 +1,7 @@
 const Product = require("../model/product");
 const multer = require("multer");
 const Firm=require('../model/Firm');
+const path=require('path');
 
 
 const storage = multer.diskStorage({
@@ -69,4 +70,20 @@ const getProductByFirm=async(req,res)=>{
   }
 }
 
-module.exports ={ addProduct:[upload.single('image'),addProduct],getProductByFirm};
+const deleteProductId=async(req,res)=>{
+  try {
+    const productId=req.params.productId;
+    const deletedProduct=await Product.findByIdAndDelete(productId);
+
+    if(!deletedProduct){
+      return res.status(404).json({error:"no product found"})
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({error:"internal server error"})
+
+    
+  }
+}
+
+module.exports ={ addProduct:[upload.single('image'),addProduct],getProductByFirm,deleteProductId};
