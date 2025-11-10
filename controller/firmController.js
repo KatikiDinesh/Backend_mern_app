@@ -1,33 +1,35 @@
 const Firm = require('../model/Firm');
 const Vendor = require('../model/Vendor');
-const Path=require('path');
 const multer = require('multer');
 
-// Multer setup
+// Multer
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/'); // folder to save images
+    cb(null, 'uploads/');
   },
   filename: (req, file, cb) => {
-    cb(null, Date.now() + Pathfile.originalname);
+    cb(null, Date.now() + file.originalname);
   }
 });
-
 const upload = multer({ storage: storage });
 
-// Controller function
 const addFirm = async (req, res) => {
   try {
     const { firmName, area, category, region, offer } = req.body;
     const image = req.file ? req.file.filename : null;
 
     const vendor = await Vendor.findById(req.vendorId);
+
     if (!vendor) {
       return res.status(404).json({ message: "Vendor not found" });
     }
 
+    if ( vendor.firm.length > 0) {
+      return res.status(400).json({ message: "vendor can only have one firm" });
+    }
+
     const firm = new Firm({
-      firmName, // ✅ corrected
+      firmName,
       area,
       category,
       region,
@@ -36,32 +38,36 @@ const addFirm = async (req, res) => {
       vendor: vendor._id
     });
 
-   const savedFirm= await firm.save();
-     vendor.firm.push(savedFirm)
+    const savedFirm = await firm.save();
+    vendor.firm.push(savedFirm._id);
+    await vendor.save();
 
-     await vendor.save()
+    return res.status(200).json({ message: "Firm added successfully", firmId: savedFirm._id });
 
-    return res.status(200).json({ message: "Firm added successfully" });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
 
-const deleteFirmId=async(req,res)=>{
-   try {
-    const firmId=req.params.firmId;
-    const deletedProduct=await Firm.findByIdAndDelete(firmId);
+const deleteFirmId = async (req, res) => {
+  try {
+    const firmId = req.params.firmId;
+    const deletedProduct = await Firm.findByIdAndDelete(firmId);
 
-    if(!deletedProduct){
-      return res.status(404).json({error:"no product found"})
+    if (!deletedProduct) {
+      return res.status(404).json({ error: "no product found" });
     }
+
+    res.status(200).json({ message: "Firm deleted successfully" });
+
   } catch (error) {
     console.error(error);
-    res.status(500).json({error:"internal server error"})
-
-    
+    res.status(500).json({ error: "internal server error" });
   }
-}
+};
 
-module.exports = { addFirm: [upload.single('image'), addFirm],deleteFirmId };
+module.exports = {
+  addFirm: [upload.single('file'), addFirm],
+  deleteFirmId
+};

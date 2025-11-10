@@ -13,7 +13,7 @@ const proudctSchema= new mongoose.Schema({
     category:{
         type:[{
             type:String,
-            enum:['veg','non veg']
+            enum:['veg','non-veg']
         }]
     },
     image:{
@@ -21,7 +21,7 @@ const proudctSchema= new mongoose.Schema({
     },
 
     bestSeller:{
-        type:String
+        type:Boolean
     },
     description:{
         type:String
